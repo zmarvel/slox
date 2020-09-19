@@ -1,6 +1,6 @@
-package com.zackmarvel.slox;
+package com.zackmarvel.slox
 
-import scala.collection.mutable.ArrayBuffer;
+import scala.collection.mutable.ArrayBuffer
 
 class Scanner(val source: String, val tokens: ArrayBuffer[Token],
               var pos: Int = 0, var line: Int = 1) {
@@ -10,7 +10,7 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
 
     def scanTokens(): ArrayBuffer[Token] = {
         while (pos < source.length) {
-            val start = pos
+//            val start = pos
             scanToken() match {
                 case Some(tok) => tokens += tok
                 case _ => ()
@@ -20,7 +20,7 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
         tokens += Token(TokenType.Eof, "", None, line)
     }
 
-    val tokenMap = Map(
+    private val tokenMap = Map(
         '(' -> TokenType.LeftParen,
         ')' -> TokenType.RightParen,
         '{' -> TokenType.LeftBrace,
@@ -34,7 +34,7 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
         '*' -> TokenType.Star,
     )
 
-    val keywords = Map(
+    private val keywords = Map(
         "and" -> TokenType.And,
         "class" -> TokenType.Class,
         "else" -> TokenType.Else,
@@ -97,20 +97,18 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
                 if (matchAhead(pos, '/')) {
                     pos += 1
                     while (!matchAhead(pos , '\n') && !atEof(pos)) {
-                        pos += 1;
+                        pos += 1
                     }
                     None
                 } else {
                     Some(Token(TokenType.Slash, "/", None, line))
                 }
-            case '\n' => {
+            case '\n' =>
                 line += 1
                 None
-            }
-            case c if c.isWhitespace => {
+            case c if c.isWhitespace =>
                 None
-            }
-            case '"' => {
+            case '"' =>
                 pos += 1
                 scanString() match {
                     case Some(str) => Some(Token(TokenType.Str, str, Some(str), line))
@@ -121,14 +119,12 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
                         None
                     }
                 }
-            }
-            case c if c.isDigit => {
+            case c if c.isDigit =>
                 scanNumber() match {
                     case Some(num) => Some(Token(TokenType.Number, num.toString, Some(num), line))
                     case _ => None
                 }
-            }
-            case c if c.isLetter => {
+            case c if c.isLetter =>
                 scanKeyword() match {
                     case Some(keyword) => keywords.get(keyword) match {
                             case Some(kwType) => Some(Token(kwType, keyword, None, line))
@@ -136,11 +132,9 @@ class Scanner(val source: String, val tokens: ArrayBuffer[Token],
                         }
                     case _ => None
                 }
-            }
-            case _ => {
+            case _ =>
                 Lox.error(Some(line), s"Unexpected token: ${source(pos)}")
                 None
-            }
         }
         pos += 1
         maybeTok

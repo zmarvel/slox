@@ -28,8 +28,14 @@ object Lox {
     }
 
     def runPrompt(): Unit = {
-        while (true) {
-            run(io.StdIn.readLine("> "))
+        var done = false
+        while (!done) {
+            val line = io.StdIn.readLine("> ")
+            if (line == "\\exit") {
+                done = true
+            } else {
+                run(line)
+            }
             sawError = false
         }
     }
@@ -37,8 +43,9 @@ object Lox {
     def run(line: String): Unit = {
         val tokens = new Scanner(line).scanTokens()
         val parser = new Parser(tokens.toArray)
+        val interpreter = new Interpreter
         parser.parse() match {
-            case Left(expr) => println(expr)
+            case Left(expr) => println(interpreter.eval(expr))
             case Right(err) =>
                 err.tok match {
                     case Some(tok) => report(Some(tok.line), "", err.msg)

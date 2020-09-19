@@ -1,4 +1,4 @@
-package com.zackmarvel.slox;
+package com.zackmarvel.slox
 
 case class ParserException(tok: Option[Token], msg: String) extends Exception
 
@@ -12,7 +12,7 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
     }
 
     def program(stmts: List[Stmt] = List[Stmt]()): List[Stmt] = {
-        if (isEof(peek)) {
+        if (isEof(peek())) {
             stmts
         } else {
             program(statement() :: stmts)
@@ -27,11 +27,10 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
     }
 
     def statement(): Stmt = {
-        peek match {
-            case Some(Token(TokenType.Print, _, _, _)) => {
+        peek() match {
+            case Some(Token(TokenType.Print, _, _, _)) =>
                 read()
                 printStmt()
-            }
             case _ => exprStmt()
         }
     }
@@ -40,7 +39,7 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         val expr = expression()
         read() match {
             case Some(Token(TokenType.Semicolon, _, _, _)) => ExprStmt(expr)
-            case maybeTok => throw new ParserException(maybeTok, "Expected semicolon following statement")
+            case maybeTok => throw ParserException(maybeTok, "Expected semicolon following statement")
         }
     }
 
@@ -49,7 +48,7 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         val expr = expression()
         read() match {
             case Some(Token(TokenType.Semicolon, _, _, _)) => Print(expr)
-            case maybeTok => throw new ParserException(maybeTok, "Expected semicolon following statement")
+            case maybeTok => throw ParserException(maybeTok, "Expected semicolon following statement")
         }
     }
 
@@ -59,17 +58,15 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
 
     def equality(): Expr = {
         var left = comparison()
-        while (isEqualityOperator(peek)) {
+        while (isEqualityOperator(peek())) {
             val equalityOperator = read()
             val right = comparison()
             equalityOperator match {
-                case Some(Token(TokenType.EqualEqual, _, _, _)) => {
-                    left = Equality(left, true, right)
-                }
-                case Some(Token(_, _, _, _)) => {
-                    left = Equality(left, false, right)
-                }
-                case _ => throw new ParserException(peek, "Expect equality op")
+                case Some(tok) if tok.typ == TokenType.EqualEqual =>
+                    left = Equality(left, equal = true, right, Some(tok))
+                case Some(tok) if tok.typ == TokenType.BangEqual =>
+                    left = Equality(left, equal = false, right, Some(tok))
+                case _ => throw ParserException(peek(), "Expect equality op")
             }
         }
         left
@@ -83,7 +80,7 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         }
     }
 
-    val comparisonOperatorType = Map(
+    private val comparisonOperatorType = Map(
         TokenType.Greater -> ComparisonType.Greater,
         TokenType.GreaterEqual -> ComparisonType.GreaterEqual,
         TokenType.Less -> ComparisonType.Less,
@@ -92,14 +89,13 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
 
     def comparison(): Expr = {
         var left = addition()
-        while (isComparisonOperator(peek)) {
+        while (isComparisonOperator(peek())) {
             val comparisonOperator = read()
             val right = addition()
             comparisonOperator match {
-                case Some(Token(typ, _, _, _)) => {
-                    left = Comparison(left, comparisonOperatorType(typ), right)
-                }
-                case _ => throw new ParserException(peek, "Expect comparison op")
+                case Some(tok) =>
+                    left = Comparison(left, comparisonOperatorType(tok.typ), right, Some(tok))
+                case _ => throw ParserException(peek(), "Expect comparison op")
             }
         }
         left
@@ -116,21 +112,20 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         }
     }
 
-    val additionOperatorType = Map(
+    private val additionOperatorType = Map(
         TokenType.Minus -> AdditionType.Minus,
         TokenType.Plus -> AdditionType.Plus,
     )
 
     def addition(): Expr = {
         var left = multiplication()
-        while (isAdditionOperator(peek)) {
-            val additionOperator = read
+        while (isAdditionOperator(peek())) {
+            val additionOperator = read()
             val right = multiplication()
             additionOperator match {
-                case Some(Token(typ, _, _, _)) => {
-                    left = Addition(left, additionOperatorType(typ), right)
-                }
-                case _ => throw new ParserException(peek, "Expect addition op")
+                case Some(tok) =>
+                    left = Addition(left, additionOperatorType(tok.typ), right, Some(tok))
+                case _ => throw ParserException(peek(), "Expect addition op")
             }
         }
         left
@@ -147,21 +142,20 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         }
     }
 
-    val multOperatorType = Map(
+    private val multOperatorType = Map(
         TokenType.Star -> MultiplicationType.Star,
         TokenType.Slash -> MultiplicationType.Slash,
     )
 
     def multiplication(): Expr = {
         var left = unary()
-        while (isMultOperator(peek)) {
+        while (isMultOperator(peek())) {
             val multOperator = read()
             val right = unary()
             multOperator match {
-                case Some(Token(typ, _, _, _)) => {
-                    left = Multiplication(left, multOperatorType(typ), right)
-                }
-                case _ => throw new ParserException(peek, "Expect multiplication op")
+                case Some(tok) =>
+                    left = Multiplication(left, multOperatorType(tok.typ), right, Some(tok))
+                case _ => throw ParserException(peek(), "Expect multiplication op")
             }
         }
         left
@@ -178,26 +172,26 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
         }
     }
 
-    val unaryOperatorType = Map(
+    private val unaryOperatorType = Map(
         TokenType.Bang -> UnaryType.Bang,
         TokenType.Minus -> UnaryType.Minus,
     )
 
     def unary(): Expr = {
-        if (isUnaryOperator(peek)) {
+        if (isUnaryOperator(peek())) {
             val unaryOperator = read()
             val rand = unary()
             unaryOperator match {
-                case Some(Token(typ, _, _, _)) => Unary(unaryOperatorType(typ), rand)
-                case _ => throw new ParserException(peek, "Expect unary op")
+                case Some(tok) => Unary(unaryOperatorType(tok.typ), rand, Some(tok))
+                case _ => throw ParserException(peek(), "Expect unary op")
             }
         } else {
             primary()
         }
     }
 
-    def isUnaryOperator(tok: Option[Token]): Boolean = {
-        tok match {
+    def isUnaryOperator(maybeTok: Option[Token]): Boolean = {
+        maybeTok match {
             case Some(tok) =>
                 unaryOperatorType.get(tok.typ) match {
                     case Some(_) => true
@@ -209,13 +203,17 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
 
     def primary(): Expr = {
         read() match {
-            case Some(Token(TokenType.Number, _, x, _)) => Number(x.get.asInstanceOf[Float])
-            case Some(Token(TokenType.Str, x, _, _)) => Str(x)
-            case Some(Token(TokenType.False, _, _, _)) => False
-            case Some(Token(TokenType.True, _, _, _)) => True
-            case Some(Token(TokenType.NIL, _, _, _)) => NIL
-            case Some(Token(TokenType.LeftParen, _, _, _)) => grouping()
-            case _ => throw new ParserException(peek, "Expect expression")
+            case Some(tok) =>
+                tok.typ match {
+                    case TokenType.Number => Number(tok.literal.get.asInstanceOf[Float], Some(tok))
+                    case TokenType.Str => Str(tok.lexeme, Some(tok))
+                    case TokenType.False => False(Some(tok))
+                    case TokenType.True => True(Some(tok))
+                    case TokenType.NIL => NIL(Some(tok))
+                        // TODO pass this token to the grouping
+                    case TokenType.LeftParen => grouping()
+                }
+            case _ => throw ParserException(peek(), "Expect expression")
         }
     }
 
@@ -223,10 +221,9 @@ class Parser(val tokens: Array[Token], var pos: Int = 0) {
     def grouping(): Expr = {
         val inner = expression()
         read() match {
-            case Some(Token(TokenType.RightParen, _, _, _)) => {
-                Grouping(inner)
-            }
-            case _ => throw new ParserException(peek, "Expect closing paren")
+            case Some(tok) if tok.typ == TokenType.RightParen =>
+                Grouping(inner, Some(tok))
+            case _ => throw ParserException(peek(), "Expect closing paren")
         }
     }
 

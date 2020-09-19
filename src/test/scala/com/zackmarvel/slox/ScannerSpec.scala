@@ -1,7 +1,7 @@
 package com.zackmarvel.slox;
 
+import org.scalatest.OptionValues._
 import org.scalatest._;
-import org.scalatest.OptionValues._;
 
 class ScannerSpec extends FlatSpec with Matchers {
     "A Scanner" should "parse ( as LeftParen" in {

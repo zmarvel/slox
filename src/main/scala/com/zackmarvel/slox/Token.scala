@@ -9,10 +9,10 @@ object TokenType extends Enumeration {
         Var, While, Eof = Value
 }
 
-case class Token(val typ: TokenType.Value, val lexeme: String,
-            val literal: Option[Any], val line: Int) {
+case class Token(typ: TokenType.Value, lexeme: String,
+                 literal: Option[Any], line: Int) {
     
-    override def toString(): String = {
-        return s"${typ.toString} $lexeme $literal"
+    override def toString: String = {
+        s"${typ.toString} $lexeme $literal"
     }
 }

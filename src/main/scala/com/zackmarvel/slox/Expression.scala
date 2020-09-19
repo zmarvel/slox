@@ -10,7 +10,9 @@ package com.zackmarvel.slox;
 // primary        → NUMBER | STRING | "false" | "true" | "nil"
 //                | "(" expression ")" ;
 
-trait Expr
+trait Expr {
+    val token: Option[Token]
+}
 
 
 object OperatorType extends Enumeration {
@@ -40,27 +42,27 @@ object PrimaryType extends Enumeration {
 
 
 
-case class Equality(left: Expr, equal: Boolean, right: Expr)
+case class Equality(left: Expr, equal: Boolean, right: Expr, token: Option[Token])
     extends Expr
-case class Comparison(left: Expr, typ: ComparisonType.Value, right: Expr)
+case class Comparison(left: Expr, typ: ComparisonType.Value, right: Expr, token: Option[Token])
     extends Expr
-case class Addition(left: Expr, typ: AdditionType.Value, right: Expr)
+case class Addition(left: Expr, typ: AdditionType.Value, right: Expr, token: Option[Token])
     extends Expr
-case class Multiplication(left: Expr, typ: MultiplicationType.Value, right: Expr)
+case class Multiplication(left: Expr, typ: MultiplicationType.Value, right: Expr, token: Option[Token])
     extends Expr
-case class Unary(typ: UnaryType.Value, rand: Expr)
+case class Unary(typ: UnaryType.Value, rand: Expr, token: Option[Token])
     extends Expr
-case class Primary(typ: PrimaryType.Value, value: Any)
+case class Primary(typ: PrimaryType.Value, value: Any, token: Option[Token])
     extends Expr
-case class Number(value: Float)
+case class Number(value: Float, token: Option[Token])
     extends Expr
-case class Str(value: String)
+case class Str(value: String, token: Option[Token])
     extends Expr
-case object False
+case class False(token: Option[Token])
     extends Expr
-case object True
+case class True(token: Option[Token])
     extends Expr
-case object NIL
+case class NIL(token: Option[Token])
     extends Expr
-case class Grouping(expr: Expr)
+case class Grouping(expr: Expr, token: Option[Token])
     extends Expr
