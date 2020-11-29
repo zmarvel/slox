@@ -1,18 +1,22 @@
-package com.zackmarvel.slox;
+package com.zackmarvel.slox
 
-// program   → statement* EOF ;
+// program        → statement* EOF ;
 // 
-// statement → exprStmt
-//           | printStmt ;
-// 
-// exprStmt  → expression ";" ;
-// printStmt → "print" expression ";" ;
+// statement      → exprStmt
+//                | valStmt
+//                | varStmt
+//
+// exprStmt       → expression ";" ;
+// valStmt        → "val" IDENTIFIER "=" expression ";"
+// varStmt        → "var" IDENTIFIER "=" expression ";"
 
 trait Stmt
 
-case class Program(body: List[Stmt])
+case class Program(body: Seq[Stmt])
     extends Stmt
 case class ExprStmt(expr: Expr)
     extends Stmt
-case class Print(expr: Expr)
+case class ValDeclaration(name: Token, expr: Expr)
     extends Stmt
+case class VarDeclaration(name: Token, expr: Expr)
+  extends Stmt

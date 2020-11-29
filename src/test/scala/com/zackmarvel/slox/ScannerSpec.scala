@@ -1,7 +1,7 @@
-package com.zackmarvel.slox;
+package com.zackmarvel.slox
 
 import org.scalatest.OptionValues._
-import org.scalatest._;
+import org.scalatest._
 
 class ScannerSpec extends FlatSpec with Matchers {
     "A Scanner" should "parse ( as LeftParen" in {
@@ -231,10 +231,10 @@ class ScannerSpec extends FlatSpec with Matchers {
             val scanner = new Scanner("or")
             scanner.scanToken().value should be (Token(TokenType.Or, "or", None, 1))
         }
-        {
-            val scanner = new Scanner("print")
-            scanner.scanToken().value should be (Token(TokenType.Print, "print", None, 1))
-        }
+//        {
+//            val scanner = new Scanner("print")
+//            scanner.scanToken().value should be (Token(TokenType.Print, "print", None, 1))
+//        }
         {
             val scanner = new Scanner("return")
             scanner.scanToken().value should be (Token(TokenType.Return, "return", None, 1))
@@ -250,6 +250,10 @@ class ScannerSpec extends FlatSpec with Matchers {
         {
             val scanner = new Scanner("true")
             scanner.scanToken().value should be (Token(TokenType.True, "true", None, 1))
+        }
+        {
+            val scanner = new Scanner("val")
+            scanner.scanToken().value should be (Token(TokenType.Val, "val", None, 1))
         }
         {
             val scanner = new Scanner("var")
